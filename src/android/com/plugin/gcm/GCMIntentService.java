@@ -9,17 +9,19 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 
+import com.azendoo.azmobile.R;
 import com.google.android.gcm.GCMBaseIntentService;
 
 @SuppressLint("NewApi")
 public class GCMIntentService extends GCMBaseIntentService {
 
 	private static final String TAG = "GCMIntentService";
-	
+
 	public GCMIntentService() {
 		super("GCMIntentService");
 	}
@@ -64,19 +66,19 @@ public class GCMIntentService extends GCMBaseIntentService {
 		if (extras != null)
 		{
 			// if we are in the foreground, just surface the payload, else post it to the statusbar
-            if (PushPlugin.isInForeground()) {
+						if (PushPlugin.isInForeground()) {
 				extras.putBoolean("foreground", true);
-                PushPlugin.sendExtras(extras);
+								PushPlugin.sendExtras(extras);
 			}
 			else {
 				extras.putBoolean("foreground", false);
 
-                // Send a notification if there is a message
-                if (extras.getString("message") != null && extras.getString("message").length() != 0) {
-                    createNotification(context, extras);
-                }
-            }
-        }
+								// Send a notification if there is a message
+								if (extras.getString("message") != null && extras.getString("message").length() != 0) {
+										createNotification(context, extras);
+								}
+						}
+				}
 	}
 
 	public void createNotification(Context context, Bundle extras)
@@ -89,7 +91,7 @@ public class GCMIntentService extends GCMBaseIntentService {
 		notificationIntent.putExtra("pushBundle", extras);
 
 		PendingIntent contentIntent = PendingIntent.getActivity(this, 0, notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
-		
+
 		int defaults = Notification.DEFAULT_ALL;
 
 		if (extras.getString("defaults") != null) {
@@ -97,11 +99,12 @@ public class GCMIntentService extends GCMBaseIntentService {
 				defaults = Integer.parseInt(extras.getString("defaults"));
 			} catch (NumberFormatException e) {}
 		}
-		
+
 		NotificationCompat.Builder mBuilder =
 			new NotificationCompat.Builder(context)
 				.setDefaults(defaults)
-				.setSmallIcon(context.getApplicationInfo().icon)
+				.setSmallIcon(R.drawable.ic_stat_notify)
+				.setLargeIcon(BitmapFactory.decodeResource(context.getResources(), context.getApplicationInfo().icon))
 				.setWhen(System.currentTimeMillis())
 				.setContentTitle(extras.getString("title"))
 				.setTicker(extras.getString("title"))
@@ -119,9 +122,9 @@ public class GCMIntentService extends GCMBaseIntentService {
 		if (msgcnt != null) {
 			mBuilder.setNumber(Integer.parseInt(msgcnt));
 		}
-		
+
 		int notId = 0;
-		
+
 		try {
 			notId = Integer.parseInt(extras.getString("notId"));
 		}
@@ -131,20 +134,20 @@ public class GCMIntentService extends GCMBaseIntentService {
 		catch(Exception e) {
 			Log.e(TAG, "Number format exception - Error parsing Notification ID" + e.getMessage());
 		}
-		
+
 		mNotificationManager.notify((String) appName, notId, mBuilder.build());
 	}
-	
+
 	private static String getAppName(Context context)
 	{
-		CharSequence appName = 
+		CharSequence appName =
 				context
 					.getPackageManager()
 					.getApplicationLabel(context.getApplicationInfo());
-		
+
 		return (String)appName;
 	}
-	
+
 	@Override
 	public void onError(Context context, String errorId) {
 		Log.e(TAG, "onError - errorId: " + errorId);
